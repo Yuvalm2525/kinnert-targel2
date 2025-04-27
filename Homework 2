@@ -1,0 +1,235 @@
+import java.util.Scanner;
+
+class Student {
+    String id, first, last, email, phone;
+
+    Student(String id, String first, String last, String email, String phone) {
+        this.id = id;
+        this.first = first;
+        this.last = last;
+        this.email = email;
+        this.phone = phone;
+    }
+
+    Student(String id, String first, String last) {
+        this(id, first, last, "", "");
+    }
+
+    public String toString() {
+        return id + "; " + last + ", " + first +
+                (email.isEmpty() ? "" : "; " + email) +
+                (phone.isEmpty() ? "" : "; " + phone);
+    }
+}
+
+class Course {
+    String code, name, lecturer;
+    int max;
+
+    Course(String code, String name, String lecturer, int max) {
+        this.code = code;
+        this.name = name;
+        this.lecturer = lecturer;
+        this.max = max;
+    }
+
+    public String toString() {
+        return code + "; " + name + "; " + lecturer + "; " + max;
+    }
+}
+
+class Enroll {
+    String studentId, courseCode;
+
+    Enroll(String s, String c) {
+        studentId = s;
+        courseCode = c;
+    }
+}
+
+class Manager {
+    Student[] students = new Student[100];
+    Course[] courses = new Course[100];
+    Enroll[] enrollments = new Enroll[200];
+    int si = 0, ci = 0, ei = 0;
+
+    void addStudent(Student s) {
+        if (findStudent(s.id) == null) students[si++] = s;
+    }
+
+    void updateStudent(String id, String email, String phone) {
+        Student s = findStudent(id);
+        if (s != null) {
+            s.email = email;
+            s.phone = phone;
+        } else System.out.println("student " + id + " does not exist");
+    }
+
+    void removeStudent(String id) {
+        int i = findStudentIndex(id);
+        if (i == -1) {
+            System.out.println("student " + id + " does not exist");
+            return;
+        }
+        students[i] = students[--si];
+        for (int j = 0; j < ei; j++)
+            if (enrollments[j].studentId.equals(id))
+                enrollments[j--] = enrollments[--ei];
+    }
+
+    void addCourse(Course c) {
+        if (findCourse(c.code) == null) courses[ci++] = c;
+    }
+
+    void updateCourse(Course c) {
+        Course existing = findCourse(c.code);
+        if (existing != null) {
+            existing.name = c.name;
+            existing.lecturer = c.lecturer;
+            existing.max = c.max;
+        } else System.out.println("course " + c.code + " does not exist");
+    }
+
+    void removeCourse(String code) {
+        int i = findCourseIndex(code);
+        if (i == -1) {
+            System.out.println("course " + code + " does not exist");
+            return;
+        }
+        courses[i] = courses[--ci];
+        for (int j = 0; j < ei; j++)
+            if (enrollments[j].courseCode.equals(code))
+                enrollments[j--] = enrollments[--ei];
+    }
+
+    void enroll(String sid, String cid) {
+        if (findStudent(sid) == null) {
+            System.out.println("student " + sid + " does not exist");
+            return;
+        }
+        Course c = findCourse(cid);
+        if (c == null) {
+            System.out.println("course " + cid + " does not exist");
+            return;
+        }
+        int count = 0;
+        for (int i = 0; i < ei; i++)
+            if (enrollments[i].courseCode.equals(cid)) count++;
+        if (count < c.max) enrollments[ei++] = new Enroll(sid, cid);
+    }
+
+    void printStudents() {
+        if (si == 0) System.out.println("No students");
+        else for (int i = 0; i < si; i++) System.out.println(students[i]);
+    }
+
+    void printCourses() {
+        if (ci == 0) System.out.println("No courses");
+        else for (int i = 0; i < ci; i++) System.out.println(courses[i]);
+    }
+
+    void printEnrollments() {
+        if (ei == 0) System.out.println("No enrollments");
+        else for (int i = 0; i < ei; i++) {
+            Student s = findStudent(enrollments[i].studentId);
+            Course c = findCourse(enrollments[i].courseCode);
+            if (s != null && c != null)
+                System.out.println(s.id + "; " + s.last + ", " + s.first + " - " + c.code + " " + c.name);
+        }
+    }
+
+    void printCoursesOfStudent(String sid) {
+        if (findStudent(sid) == null) {
+            System.out.println("student " + sid + " does not exist");
+            return;
+        }
+        System.out.println("Courses of student " + sid + ":");
+        for (int i = 0; i < ei; i++)
+            if (enrollments[i].studentId.equals(sid)) {
+                Course c = findCourse(enrollments[i].courseCode);
+                if (c != null) System.out.println(c.code + " - " + c.name);
+            }
+    }
+
+    void printStudentsInCourse(String code) {
+        if (findCourse(code) == null) {
+            System.out.println("course " + code + " does not exist");
+            return;
+        }
+        System.out.println("Students in course " + code + ":");
+        for (int i = 0; i < ei; i++)
+            if (enrollments[i].courseCode.equals(code)) {
+                Student s = findStudent(enrollments[i].studentId);
+                if (s != null) System.out.println(s.id + "; " + s.last + ", " + s.first);
+            }
+    }
+
+    Student findStudent(String id) {
+        for (int i = 0; i < si; i++)
+            if (students[i].id.equals(id)) return students[i];
+        return null;
+    }
+
+    Course findCourse(String code) {
+        for (int i = 0; i < ci; i++)
+            if (courses[i].code.equals(code)) return courses[i];
+        return null;
+    }
+
+    int findStudentIndex(String id) {
+        for (int i = 0; i < si; i++)
+            if (students[i].id.equals(id)) return i;
+        return -1;
+    }
+
+    int findCourseIndex(String code) {
+        for (int i = 0; i < ci; i++)
+            if (courses[i].code.equals(code)) return i;
+        return -1;
+    }
+}
+
+public class UniversityApp {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        Manager m = new Manager();
+        System.out.println("CoursesApplication");
+
+        while (true) {
+            System.out.println("Select action (s[add student]/c[add course]/e[enroll]/u[update student]/x[print all enrollments]/ps[print all students]/pc[print all courses]/sc[student courses]/cs[course students]/rs[remove student]/rc[remove course]/q[exit]):");
+            String input = sc.nextLine();
+            if (input.equals("q")) break;
+
+            String[] parts = input.split(" ", 2);  // Split the action and the parameters
+
+            if (parts[0].equals("s")) {
+                String[] p = parts[1].split(";");
+                m.addStudent(p.length >= 5 ? new Student(p[0], p[1], p[2], p[3], p[4]) : new Student(p[0], p[1], p[2]));
+            } else if (parts[0].equals("c")) {
+                String[] p = parts[1].split(";");
+                m.addCourse(new Course(p[0], p[1], p[2], Integer.parseInt(p[3])));
+            } else if (parts[0].equals("e")) {
+                String[] p = parts[1].split(";");
+                m.enroll(p[0], p[1]);
+            } else if (parts[0].equals("u")) {
+                String[] p = parts[1].split(";");
+                m.updateStudent(p[0], p[1], p[2]);
+            } else if (input.equals("x")) {
+                m.printEnrollments();
+            } else if (input.equals("ps")) {
+                m.printStudents();
+            } else if (input.equals("pc")) {
+                m.printCourses();
+            } else if (parts[0].equals("sc")) {
+                m.printCoursesOfStudent(parts[1]);
+            } else if (parts[0].equals("cs")) {
+                m.printStudentsInCourse(parts[1]);
+            } else if (parts[0].equals("rs")) {
+                m.removeStudent(parts[1]);
+            } else if (parts[0].equals("rc")) {
+                m.removeCourse(parts[1]);
+            }
+        }
+        sc.close();
+    }
+}
